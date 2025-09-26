@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { fetchJudgeMetadata } from "../lib/api";
+import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import { apiClient } from "../lib/apiClient"; // <-- Use the new apiClient
 import { JudgeMetadata } from "../types";
 
 interface Props {
@@ -8,23 +9,31 @@ interface Props {
 }
 
 export function JudgeLoader({ wallet, onLoaded }: Props) {
-  const [tokenId, setTokenId] = useState("");
+  // Read from local storage for initial value
+  const [tokenId, setTokenId] = useState(() => {
+    const saved = localStorage.getItem("judge_app_last_token_id");
+    return saved ? JSON.parse(saved) : "";
+  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleLoad = async () => {
     if (!tokenId) return;
     setLoading(true);
-    setError("");
-    try {
-      const id = parseInt(tokenId, 10);
-      const { metadata } = await fetchJudgeMetadata(id, wallet);
-      onLoaded(id, metadata);
-    } catch (e: any) {
-      setError(e.message || "An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
+
+    const id = parseInt(tokenId, 10);
+    const promise = apiClient.fetchJudgeMetadata(id, wallet);
+
+    toast.promise(promise, {
+      loading: "Loading Judge Metadata...",
+      success: (data) => {
+        onLoaded(id, data.metadata);
+        return "Judge loaded successfully!";
+      },
+      error: (err) => err.message || "Failed to load Judge.",
+    });
+
+    // We still need to catch the error to stop the loading state
+    promise.catch(() => {}).finally(() => setLoading(false));
   };
 
   return (
@@ -35,13 +44,12 @@ export function JudgeLoader({ wallet, onLoaded }: Props) {
         type="number"
         value={tokenId}
         onChange={(e) => setTokenId(e.target.value)}
-        placeholder="e.g., 1"
+        placeholder="e.g., 1 (Hint: Use 1 for mock success)"
         disabled={loading}
       />
       <button onClick={handleLoad} disabled={loading || !tokenId}>
         {loading ? "Loading..." : "Load Judge"}
       </button>
-      {error && <p className="error">{error}</p>}
     </div>
   );
 }

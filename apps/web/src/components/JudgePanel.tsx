@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
+import Skeleton from "react-loading-skeleton";
+import { apiClient } from "../lib/apiClient"; // <-- Use the new apiClient
 import { JudgeMetadata, Scorecard, Submission } from "../types";
-import { runJudge, uploadScorecard } from "../lib/api";
 
 interface Props {
   tokenId: number;
@@ -23,35 +26,50 @@ export function JudgePanel({
     rootHash: string;
     txHash: string;
   } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [isJudging, setIsJudging] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleRunJudge = async () => {
-    setLoading(true);
-    setError("");
+    setIsJudging(true);
     setScorecard(null);
     setUploadResult(null);
+
+    const promise = apiClient.runJudge(tokenId, wallet, submission.id, text);
+
+    toast.promise(promise, {
+      loading: "Running AI Judge...",
+      success: "Judge finished successfully!",
+      error: (err) => err.message || "Failed to run judge.",
+    });
+
     try {
-      const result = await runJudge(tokenId, wallet, submission.id, text);
+      const result = await promise;
       setScorecard(result.scorecard);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      console.error(e);
     } finally {
-      setLoading(false);
+      setIsJudging(false);
     }
   };
 
   const handleSaveScorecard = async () => {
     if (!scorecard) return;
-    setLoading(true);
-    setError("");
+    setIsSaving(true);
+    const promise = apiClient.uploadScorecard(tokenId, scorecard);
+
+    toast.promise(promise, {
+      loading: "Saving to 0G Storage...",
+      success: "Scorecard saved!",
+      error: (err) => err.message || "Failed to save.",
+    });
+
     try {
-      const result = await uploadScorecard(tokenId, scorecard);
+      const result = await promise;
       setUploadResult(result);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      console.error(e);
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -66,8 +84,8 @@ export function JudgePanel({
             onChange={(e) => setText(e.target.value)}
             rows={15}
           ></textarea>
-          <button onClick={handleRunJudge} disabled={loading}>
-            {loading ? "Judging..." : "Run Judge"}
+          <button onClick={handleRunJudge} disabled={isJudging || isSaving}>
+            {isJudging ? "Judging..." : "Run Judge"}
           </button>
         </div>
 
@@ -82,10 +100,28 @@ export function JudgePanel({
           </ul>
         </div>
 
-        {error && <p className="error">{error}</p>}
-
-        {scorecard && (
+        {isJudging && (
           <div className="card result-card">
+            <h3>Generating Scorecard...</h3>
+            <p>
+              <Skeleton count={3} />
+            </p>
+            <h4>
+              <Skeleton width={150} />
+            </h4>
+            <p>
+              <Skeleton count={2} />
+            </p>
+          </div>
+        )}
+
+        {scorecard && !isJudging && (
+          <motion.div
+            className="card result-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h3>Judging Result</h3>
             <p>
               <strong>Status: </strong>
@@ -122,15 +158,19 @@ export function JudgePanel({
             </table>
             <button
               onClick={handleSaveScorecard}
-              disabled={loading || !!uploadResult}
+              disabled={isSaving || !!uploadResult}
             >
-              {loading ? "Saving..." : "Save Scorecard to 0G Storage"}
+              {isSaving ? "Saving..." : "Save Scorecard to 0G Storage"}
             </button>
-          </div>
+          </motion.div>
         )}
 
         {uploadResult && (
-          <div className="card">
+          <motion.div
+            className="card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <h3>Immutable Record Saved!</h3>
             <p>Your scorecard has been saved to 0G Storage.</p>
             <strong>Root Hash:</strong>
@@ -138,13 +178,14 @@ export function JudgePanel({
               <code>{uploadResult.rootHash}</code>
             </pre>
             <button
-              onClick={() =>
-                navigator.clipboard.writeText(uploadResult.rootHash)
-              }
+              onClick={() => {
+                navigator.clipboard.writeText(uploadResult.rootHash);
+                toast.success("Root hash copied to clipboard!");
+              }}
             >
               Copy Hash
             </button>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
