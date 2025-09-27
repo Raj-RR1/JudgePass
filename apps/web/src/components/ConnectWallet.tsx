@@ -1,5 +1,3 @@
-// apps/web/src/components/ConnectWallet.tsx
-
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 import { injected } from "wagmi/connectors";
 
@@ -8,35 +6,33 @@ export function ConnectWallet() {
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
 
-  // --- ENS Integration ---
-  // Fetch the ENS name for the connected address
   const { data: ensName, isLoading } = useEnsName({
     address: address,
-    chainId: 1, // ENS names are primarily on Ethereum Mainnet
+    chainId: 1,
   });
-  // --- End ENS Integration ---
 
   if (isConnected) {
     const truncateAddress = (addr: string) =>
       `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-
     return (
-      <div className="wallet-info">
-        {/*
-          Display Logic:
-          1. If ENS name is loading, show a loading state.
-          2. If ENS name exists, display it.
-          3. Otherwise, fall back to the truncated address.
-        */}
-        <span>
-          {isLoading ? "Fetching ENS..." : ensName || truncateAddress(address!)}
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-sm">
+          {isLoading ? "..." : ensName || truncateAddress(address!)}
         </span>
-        <button onClick={() => disconnect()}>Disconnect</button>
+        <button
+          onClick={() => disconnect()}
+          className="text-xs text-gray-500 hover:underline"
+        >
+          (Disconnect)
+        </button>
       </div>
     );
   }
   return (
-    <button onClick={() => connect({ connector: injected() })}>
+    <button
+      onClick={() => connect({ connector: injected() })}
+      className="bg-primary text-white text-sm font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+    >
       Connect Wallet
     </button>
   );

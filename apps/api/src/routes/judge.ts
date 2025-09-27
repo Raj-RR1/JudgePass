@@ -24,8 +24,23 @@ interface Service {
 
 export function registerJudge() {
   const servicesHandler: RouteHandler = async () => {
-    const services = await listServices();
-    return jsonResponse({ services });
+    try {
+      console.log("Fetching services...");
+      const services = await listServices();
+      console.log("Services response:", services);
+      console.log("Services type:", typeof services);
+      console.log(
+        "Services length:",
+        Array.isArray(services) ? services.length : "not array"
+      );
+      return jsonResponse({ services });
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      return jsonResponse(
+        { error: "Failed to fetch services", services: [] },
+        500
+      );
+    }
   };
 
   registerRoute("/judge/services", servicesHandler);
@@ -55,31 +70,65 @@ export function registerJudge() {
     }
 
     try {
+      console.log(
+        `Checking authorization for tokenId: ${tokenId}, wallet: ${wallet}`
+      );
       const authorized = await isAuthorizedOrOwner(tokenId, wallet);
+      console.log(`Authorization result: ${authorized}`);
       if (!authorized) {
         return jsonResponse({ error: "Not owner of authorized" }, 401);
       }
 
+      console.log(`Getting encrypted URI for tokenId: ${tokenId}`);
       const encryptedURI = await getEncryptedURI(tokenId);
+      console.log(`Encrypted URI: ${encryptedURI}`);
+
+      console.log(`Fetching encrypted payload...`);
       const base64Payload = await fetchEncryptedPayload(encryptedURI);
+      console.log(`Payload length: ${base64Payload.length}`);
+      console.log(
+        `Payload content (first 100 chars): ${base64Payload.substring(0, 100)}`
+      );
+      console.log(
+        `Is valid base64?`,
+        /^[A-Za-z0-9+/]*={0,2}$/.test(base64Payload)
+      );
+
+      console.log(`Attempting decryption...`);
       const plainText = await decryptAesGcmBase64(
         base64Payload,
         METADATA_SYM_KEY_BASE64
+      );
+      console.log(
+        `Decryption successful, plaintext length: ${plainText.length}`
       );
 
       let metadata: JudgeMetadata;
 
       try {
         metadata = JSON.parse(plainText);
-      } catch {
-        return jsonResponse({
-          error: "Invalid metadata JSON after decryption",
-        });
+        console.log(`JSON parsing successful`);
+      } catch (parseError) {
+        console.error(`JSON parsing failed:`, parseError);
+        return jsonResponse(
+          {
+            error: "Invalid metadata JSON after decryption",
+          },
+          400
+        );
       }
       return jsonResponse({ metadata });
     } catch (error) {
       {
         console.error("Error processing metadata request:", error);
+
+        if (error instanceof Error) {
+          console.error("Error name:", error.name);
+          console.error("Error message:", error.message);
+        } else {
+          console.error("Unknown error type:", typeof error);
+        }
+
         return jsonResponse(
           {
             error: "Failed to process request",
@@ -157,8 +206,7 @@ export function registerJudge() {
 
       let providerAddress = chosenProviderAddress;
       if (!providerAddress) {
-        const listServiceFn = await listServices();
-        const services = await listServiceFn();
+        const services = await listServices();
 
         const preferred =
           services.find(
