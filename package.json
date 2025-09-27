@@ -1,16 +1,12 @@
 {
-  "name": "judge-monorepo",
+  "name": "judgepass",
+  "module": "index.ts",
+  "type": "module",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-  "dev": "concurrently \"bun run dev:api\" \"bun run dev:web\"",
-  "dev:api": "cd apps/api && bun run dev",
-  "dev:web": "cd apps/web && bun run dev"
-},
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }
