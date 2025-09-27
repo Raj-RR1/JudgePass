@@ -3,7 +3,8 @@
   "module": "src/server.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/server.ts"
+    "dev": "bun --watch src/server.ts",
+    "mint": "bun run scripts/mint-judge.ts"
   },
   "dependencies": {
     "@0glabs/0g-serving-broker": "^0.1.1",

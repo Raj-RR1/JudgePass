@@ -51,12 +51,20 @@ export function JudgeDashboardPage() {
             Judge Loaded: {metadata.version}
           </p>
         </div>
-        <Link
-          to="/judge/submissions"
-          className="bg-primary text-white text-sm font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
-        >
-          View All Submissions
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            to="/judge/services"
+            className="bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+          >
+            View Services
+          </Link>
+          <Link
+            to="/judge/submissions"
+            className="bg-primary text-white text-sm font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
+          >
+            View All Submissions
+          </Link>
+        </div>
       </header>
       <section>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">

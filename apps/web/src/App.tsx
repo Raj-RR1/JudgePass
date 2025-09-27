@@ -13,6 +13,7 @@ import { HackerDashboardPage } from "./pages/HackerDashboardPage";
 import { HackerDisputesPage } from "./pages/HackerDisputesPage";
 import { HackerSubmitDisputePage } from "./pages/HackerSubmitDisputePage";
 import { JudgeSubmissionsPage } from "./pages/JudgeSubmissionsPage";
+import { ServicesPage } from "./pages/ServicesPage";
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="submissions" element={<JudgeSubmissionsPage />} />
           <Route path="submission/:id" element={<SubmissionDetailPage />} />
           <Route path="score/:id" element={<ScoringPage />} />
+          <Route path="services" element={<ServicesPage />} />
           <Route path="marketplace" element={<MarketplacePage />} />{" "}
           {/* <-- Add this new route */}
         </Route>
