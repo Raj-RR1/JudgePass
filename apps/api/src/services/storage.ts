@@ -40,3 +40,15 @@ export async function uploadJsonToStorage(
 
   return { rootHash: tx.rootHash, txHash: tx.txHash };
 }
+
+export async function fetchEncryptedPayload(
+  encryptedURI: string
+): Promise<string> {
+  if (/^https?:\/\//i.test(encryptedURI)) {
+    const res = await fetch(encryptedURI);
+    if (!res.ok) throw new Error(`Failed to fetch encryptedURI: ${res.status}`);
+    const body = await res.text();
+    return body.trim();
+  }
+  return encryptedURI;
+}
