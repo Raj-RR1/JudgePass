@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom"; // <-- Import useLocation
 import { useAccount } from "wagmi";
 import { getSubmissionById } from "../lib/submissionsDb";
 import { JudgeMetadata, Submission } from "../types";
@@ -32,9 +32,14 @@ const InfoLink = ({
 export function SubmissionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { address, isConnected } = useAccount();
+  const location = useLocation(); // <-- Get location object
 
   const [submission, setSubmission] = useState<Submission | null>(null);
-  const [metadata, setMetadata] = useState<JudgeMetadata | null>(null);
+
+  // Prioritize passed state, then fall back to null
+  const [metadata, setMetadata] = useState<JudgeMetadata | null>(
+    location.state?.metadata || null
+  );
   const [isScoring, setIsScoring] = useState(false);
   const tokenIdFromStorage = localStorage.getItem("judge_app_last_token_id");
 
@@ -42,16 +47,22 @@ export function SubmissionDetailPage() {
     if (id) {
       setSubmission(getSubmissionById(id) || null);
     }
-  }, [id]);
+    // If metadata wasn't passed via state (e.g., on page refresh), try loading from storage
+    if (!location.state?.metadata) {
+      const metaFromStorage = localStorage.getItem("judge_app_metadata");
+      if (metaFromStorage) {
+        setMetadata(JSON.parse(metaFromStorage));
+      }
+    }
+  }, [id, location.state]);
 
   const handleJudgeLoaded = (_id: number, meta: JudgeMetadata) => {
-    // Add tokenId to meta object before saving
     const fullMeta = { ...meta, tokenId: _id };
     setMetadata(fullMeta);
     localStorage.setItem("judge_app_metadata", JSON.stringify(fullMeta));
   };
 
-  // If the judge hasn't loaded their INFT yet, show the loader.
+  // If metadata is still null, it means we need to load it
   if (!metadata) {
     return (
       <div className="w-full max-w-lg mx-auto">

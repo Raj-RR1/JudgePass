@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { ConnectWalletButton } from "./ConnectWalletButton";
 
 const NavLink = ({
   to,
@@ -57,6 +58,9 @@ export function HackerLayout() {
               Help
             </NavLink>
           </nav>
+          <div className="mt-auto">
+            <ConnectWalletButton />
+          </div>
         </div>
       </aside>
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto">

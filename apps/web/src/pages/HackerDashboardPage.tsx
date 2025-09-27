@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { getSubmissions } from "../lib/submissionsDb";
-import { DisputeForm } from "../components/DisputeForm";
 
 const StatusBadge = ({ status }: { status: string }) => {
   let colorClasses = "";
@@ -83,9 +82,6 @@ export function HackerDashboardPage() {
           </table>
         </div>
       </div>
-
-      {/* Render the DisputeForm only if there are submissions */}
-      {submissions.length > 0 && <DisputeForm submissions={submissions} />}
     </>
   );
 }

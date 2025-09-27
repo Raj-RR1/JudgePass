@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { ConnectWalletButton } from "./ConnectWalletButton";
 import { ConnectWallet } from "./ConnectWallet";
 import { useAccount } from "wagmi";
 
@@ -60,39 +61,41 @@ export function JudgeLayout() {
             <NavLink to="/judge" icon="dashboard">
               Dashboard
             </NavLink>
-            {/* These are placeholders for future functionality */}
-            <NavLink to="#" icon="folder_open">
+            <NavLink to="/judge/submissions" icon="folder_open">
               Submissions
-            </NavLink>
-            <NavLink to="#" icon="groups">
-              Judges
             </NavLink>
             <NavLink to="/judge/marketplace" icon="storefront">
               Marketplace
             </NavLink>
+            <NavLink to="#" icon="groups">
+              Judges
+            </NavLink>
           </nav>
         </div>
-        <div>
-          {isConnected && (
-            <div className="flex items-center gap-3 px-4 py-2">
-              <span className="material-symbols-outlined">account_circle</span>
-              <ConnectWallet />
-            </div>
-          )}
+        {/* Replace the old profile section with the new button */}
+        <div className="mt-auto">
+          <ConnectWalletButton />
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
         <header className="flex md:hidden items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-          {/* Mobile Header - can be expanded later */}
-          <Link to="/" className="flex items-center gap-3">
-            <Logo />
-            <h1 className="text-xl font-bold">ProofJudge</h1>
-          </Link>
-          <ConnectWallet />
+          {/* ... Mobile Header ... */}
         </header>
         <main className="flex-1 overflow-y-auto p-4 sm:p-8">
-          <Outlet />
+          {/* Prompt to connect if not connected */}
+          {!isConnected && (
+            <div className="text-center p-10 bg-white/5 dark:bg-black/5 rounded-lg flex flex-col items-center gap-4 max-w-md mx-auto">
+              <h3 className="text-2xl font-bold mb-2">Welcome!</h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Please connect your wallet to access the dashboard.
+              </p>
+              <div className="w-full max-w-xs">
+                <ConnectWalletButton />
+              </div>
+            </div>
+          )}
+          {isConnected && <Outlet />}
         </main>
       </div>
     </div>

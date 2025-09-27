@@ -1,5 +1,3 @@
-// apps/web/src/pages/HackerDisputesPage.tsx
-
 import { Link } from "react-router-dom";
 import { getDisputes } from "../lib/disputesDb";
 
@@ -41,11 +39,11 @@ export function HackerDisputesPage() {
           Disputes
         </h2>
         <Link
-          to="/hacker/submissions"
+          to="/hacker/disputes/new"
           className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors"
         >
           <span className="material-symbols-outlined">add_circle</span>
-          <span>Submit Dispute</span>
+          <span>Submit New Dispute</span>
         </Link>
       </div>
       <div className="bg-background-light dark:bg-background-dark/50 rounded-lg border border-primary/20 dark:border-primary/30 overflow-hidden">

@@ -11,6 +11,8 @@ import { ScoringPage } from "./pages/ScoringPage";
 import { MarketplacePage } from "./pages/MarketplacePage";
 import { HackerDashboardPage } from "./pages/HackerDashboardPage";
 import { HackerDisputesPage } from "./pages/HackerDisputesPage";
+import { HackerSubmitDisputePage } from "./pages/HackerSubmitDisputePage";
+import { JudgeSubmissionsPage } from "./pages/JudgeSubmissionsPage";
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
         {/* Judge-facing pages with the dashboard layout */}
         <Route path="/judge" element={<JudgeLayout />}>
           <Route index element={<JudgeDashboardPage />} />
+          <Route path="submissions" element={<JudgeSubmissionsPage />} />
           <Route path="submission/:id" element={<SubmissionDetailPage />} />
           <Route path="score/:id" element={<ScoringPage />} />
           <Route path="marketplace" element={<MarketplacePage />} />{" "}
@@ -38,6 +41,7 @@ export default function App() {
           <Route path="submissions" element={<HackerDashboardPage />} />
           <Route path="submit" element={<HackerSubmitPage />} />
           <Route path="disputes" element={<HackerDisputesPage />} />{" "}
+          <Route path="disputes/new" element={<HackerSubmitDisputePage />} />
         </Route>
       </Routes>
     </BrowserRouter>
