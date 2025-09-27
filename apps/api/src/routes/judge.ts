@@ -22,7 +22,7 @@ interface Service {
   provider: string;
 }
 
-export function registerJudge(server: Server) {
+export function registerJudge() {
   const servicesHandler: RouteHandler = async () => {
     const services = await listServices();
     return jsonResponse({ services });
