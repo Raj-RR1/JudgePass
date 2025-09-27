@@ -1,27 +1,33 @@
+import { getSubmissions } from "../lib/submissionsDb";
 import { Submission } from "../types";
 
 interface Props {
-  items: Submission[];
   onJudge: (submission: Submission) => void;
 }
 
-export function SubmissionsList({ items, onJudge }: Props) {
+export function SubmissionsList({ onJudge }: Props) {
+  const items = getSubmissions();
+
+  if (items.length === 0) {
+    return <p className="notice">No submissions yet.</p>;
+  }
+
   return (
     <table>
       <thead>
         <tr>
-          <th>ID</th>
           <th>Title</th>
-          <th>Description</th>
+          <th>Team</th>
+          <th>Submitted On</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
         {items.map((item) => (
           <tr key={item.id}>
-            <td>{item.id}</td>
             <td>{item.title}</td>
-            <td>{item.description}</td>
+            <td>{item.team}</td>
+            <td>{new Date(item.submittedAt).toLocaleString()}</td>
             <td>
               <button onClick={() => onJudge(item)}>Judge</button>
             </td>

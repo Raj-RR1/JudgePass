@@ -20,6 +20,8 @@ export type Scorecard = {
 export type Submission = {
   id: string;
   title: string;
+  team: string;
+  links: string;
   description: string;
-  text: string;
+  submittedAt: string;
 };

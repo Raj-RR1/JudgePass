@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { apiClient } from "../lib/apiClient"; // <-- Use the new apiClient
+import { apiClient } from "../lib/apiClient"; // <-- Uses the swappable client
 import { JudgeMetadata } from "../types";
 
 interface Props {
@@ -9,7 +9,6 @@ interface Props {
 }
 
 export function JudgeLoader({ wallet, onLoaded }: Props) {
-  // Read from local storage for initial value
   const [tokenId, setTokenId] = useState(() => {
     const saved = localStorage.getItem("judge_app_last_token_id");
     return saved ? JSON.parse(saved) : "";
@@ -21,6 +20,7 @@ export function JudgeLoader({ wallet, onLoaded }: Props) {
     setLoading(true);
 
     const id = parseInt(tokenId, 10);
+    // Use the apiClient to make the call (will be mock or real based on .env)
     const promise = apiClient.fetchJudgeMetadata(id, wallet);
 
     toast.promise(promise, {
@@ -32,7 +32,6 @@ export function JudgeLoader({ wallet, onLoaded }: Props) {
       error: (err) => err.message || "Failed to load Judge.",
     });
 
-    // We still need to catch the error to stop the loading state
     promise.catch(() => {}).finally(() => setLoading(false));
   };
 

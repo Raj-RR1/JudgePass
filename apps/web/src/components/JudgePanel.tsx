@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
-import { apiClient } from "../lib/apiClient"; // <-- Use the new apiClient
+import { apiClient } from "../lib/apiClient"; // <-- Uses the swappable client
 import { JudgeMetadata, Scorecard, Submission } from "../types";
 
 interface Props {
@@ -20,7 +20,8 @@ export function JudgePanel({
   submission,
   onBack,
 }: Props) {
-  const [text, setText] = useState(submission.text);
+  // **CRITICAL FIX**: Use `submission.description` instead of `submission.text`
+  const [text, setText] = useState(submission.description);
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [uploadResult, setUploadResult] = useState<{
     rootHash: string;
