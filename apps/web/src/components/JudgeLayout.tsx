@@ -54,7 +54,7 @@ export function JudgeLayout() {
           <Link to="/" className="flex items-center gap-3 mb-8">
             <Logo />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              ProofJudge
+              JudgePass
             </h1>
           </Link>
           <nav className="flex flex-col space-y-2">

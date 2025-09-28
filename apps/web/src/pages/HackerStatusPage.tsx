@@ -21,7 +21,7 @@ const StatusPageLayout = ({ children }: { children: React.ReactNode }) => (
           </svg>
         </div>
         <h2 className="text-lg font-bold tracking-tight text-black dark:text-white">
-          ProofJudge
+          JudgePass
         </h2>
       </Link>
       <Link

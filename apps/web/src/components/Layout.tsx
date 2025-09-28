@@ -21,7 +21,7 @@ export function Layout() {
         <Link to="/" className="flex items-center gap-3">
           <Logo />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            ProofJudge
+            JudgePass
           </h2>
         </Link>
         {/* You can add your ConnectWallet component here later if needed */}
@@ -33,7 +33,7 @@ export function Layout() {
 
       <footer className="text-center py-6 px-4 border-t border-gray-200 dark:border-gray-800">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          © 2024 ProofJudge. All rights reserved.
+          © 2024 JudgePass. All rights reserved.
         </p>
       </footer>
     </div>

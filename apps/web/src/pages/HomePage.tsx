@@ -150,8 +150,8 @@ export function HomePage() {
           className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-10 animate-fade-in-up"
           style={{ animationDelay: "0.2s" }}
         >
-          ProofJudge leverages INFTs and 0G Storage/Compute for a transparent
-          and fair judging process.
+          JudgePass leverages INFTs and 0G Storage/Compute for a transparent and
+          fair judging process.
         </p>
 
         <a href="#role-selection" className="absolute bottom-10 animate-bounce">

@@ -1,6 +1,6 @@
-# ProofJudge — INFT‑powered, verifiable hackathon judging 🎯
+# JudgePass — INFT‑powered, verifiable hackathon judging 🎯
 
-A portable “judge brain” packaged as an Intelligent NFT (INFT) that mirrors ETHGlobal‑style rubrics, runs TEE‑verified scoring, and stores immutable scorecards on 0G Storage.  
+A portable “judge brain” packaged as an Intelligent NFT (INFT) that mirrors ETHGlobal‑style rubrics, runs TEE‑verified scoring, and stores immutable scorecards on 0G Storage.
 Judging becomes transparent, auditable, and access‑controlled via INFT ownership or authorization. ✅
 
 ### Highlights
@@ -34,7 +34,7 @@ Judging becomes transparent, auditable, and access‑controlled via INFT ownersh
 
 ### Overview
 
-ProofJudge turns an INFT into a self‑contained, access‑controlled judge that organizers load to evaluate hackathon projects with verifiable inference and immutable scorecards.  
+JudgePass turns an INFT into a self‑contained, access‑controlled judge that organizers load to evaluate hackathon projects with verifiable inference and immutable scorecards.
 It ensures consistent, auditable judging across events while respecting on‑chain ownership and authorization.
 
 ---

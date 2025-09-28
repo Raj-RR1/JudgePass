@@ -35,7 +35,7 @@ export function HackerLayout() {
         <div className="flex flex-col h-full">
           <Link to="/">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-              ProofJudge
+              JudgePass
             </h1>
           </Link>
           <nav className="mt-10 flex flex-col gap-2">
