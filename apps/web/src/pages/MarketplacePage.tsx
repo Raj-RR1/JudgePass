@@ -3,11 +3,10 @@
 // Mock data for the judges. In a real app, this would come from an API.
 const judges = [
   {
-    name: "Judge Alex",
+    name: "Judge Thor",
     specialty:
       "Expert in blockchain and decentralized technologies. 10+ years of experience in software development.",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDuT16JxpgyPDzmIrx6Xot0Ekk45HLdZE9pBjucno3hycECPRz0y8N9Yt3XmziiACfgfdGRfmG4KSMcD7UlVpw1ArCFVzA9SpL7w23CkcI_SQmtOGFO4ooVBjgiqRR72yiUxITyAoSvYaINsvYqBqEOHa1yKafNdGQoZcI1CONCDqBuaIAI1OiF0a_QKQM-KoPgZsfsjjeEVqsDpbG5H5VtdQBdQHdHxMRv28p1Atmf3aGkKKFoEYBNBPrPUR0esFzlCIaPnmqVbdc",
+    imageUrl: "https://i.ibb.co/N6rV28n8/judge-thor.jpg",
     status: "Available",
   },
   {
