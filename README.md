@@ -1,7 +1,12 @@
 # JudgePass — INFT‑powered, verifiable hackathon judging 🎯
 
-A portable “judge brain” packaged as an Intelligent NFT (INFT) that mirrors ETHGlobal‑style rubrics, runs TEE‑verified scoring, and stores immutable scorecards on 0G Storage.
+A portable "judge brain" packaged as an Intelligent NFT (INFT) that mirrors ETHGlobal‑style rubrics, runs TEE‑verified scoring, and stores immutable scorecards on 0G Storage.
 Judging becomes transparent, auditable, and access‑controlled via INFT ownership or authorization. ✅
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/judgepass)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.30-blue.svg)](https://soliditylang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-blue.svg)](https://www.typescriptlang.org/)
 
 ### Highlights
 
@@ -233,6 +238,54 @@ bun run src/server.ts
 cd ../web
 bun run dev
 ```
+
+---
+
+### Deployment
+
+#### Vercel Deployment (Recommended)
+
+1. **Fork this repository** and connect it to Vercel
+2. **Set environment variables** in Vercel dashboard:
+   ```
+   OG_RPC_URL=https://evmrpc-testnet.0g.ai
+   INDEXER_RPC=https://indexer-storage-testnet-turbo.0g.ai
+   PRIVATE_KEY=your_funded_testnet_key
+   INFT_CONTRACT_ADDRESS=your_inft_address
+   METADATA_SYM_KEY_BASE64=your_base64_key
+   ```
+3. **Deploy** - Vercel will automatically build and deploy both API and web apps
+
+#### Manual Deployment
+
+```bash
+# Build contracts
+bun run contracts:build
+
+# Test contracts
+bun run contracts:test
+
+# Deploy contracts (optional)
+bun run contracts:deploy
+
+# Build web app
+cd apps/web && bun run build
+
+# Deploy API
+cd apps/api && bun run build
+```
+
+#### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OG_RPC_URL` | 0G RPC endpoint | ✅ |
+| `INDEXER_RPC` | 0G Indexer endpoint | ✅ |
+| `PRIVATE_KEY` | Funded wallet private key | ✅ |
+| `INFT_CONTRACT_ADDRESS` | Deployed INFT contract address | ✅ |
+| `METADATA_SYM_KEY_BASE64` | Base64 encoded encryption key | ✅ |
+| `PORT` | API server port (default: 3001) | ❌ |
+| `KV_URL` | Key-value store URL (optional) | ❌ |
 
 ---
 

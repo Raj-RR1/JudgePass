@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/api/src/server.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["apps/api/src/**"]
+      }
+    },
+    {
+      "src": "apps/web/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "apps/api/src/server.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "apps/web/dist/$1"
+    }
+  ],
+  "env": {
+    "OG_RPC_URL": "@og_rpc_url",
+    "INDEXER_RPC": "@indexer_rpc", 
+    "PRIVATE_KEY": "@private_key",
+    "INFT_CONTRACT_ADDRESS": "@inft_contract_address",
+    "METADATA_SYM_KEY_BASE64": "@metadata_sym_key_base64"
+  },
+  "functions": {
+    "apps/api/src/server.ts": {
+      "maxDuration": 30
+    }
+  }
+}
