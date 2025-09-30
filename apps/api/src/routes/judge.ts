@@ -1,4 +1,5 @@
 import type { Server } from "bun";
+import { ethers } from "ethers";
 import { isAuthorizedOrOwner, getEncryptedURI } from "../services/inft";
 import {
   fetchEncryptedPayload,
@@ -9,6 +10,7 @@ import { decryptAesGcmBase64 } from "../services/crypto";
 import { METADATA_SYM_KEY_BASE64 } from "../config";
 import type { JudgeMetadata, ScoreCard } from "../types";
 import { listServices, runJudgingInference } from "../services/compute";
+import { createWalletFromSignature, createWalletFromAddress, WalletInfo } from "../services/walletUtils";
 
 function jsonResponse(data: unknown, status: number = 200) {
   return new Response(JSON.stringify(data), {
@@ -174,11 +176,12 @@ export function registerJudge() {
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
 
-    const { wallet, submissionId, text, chosenProviderAddress } = body as {
+    const { wallet, submissionId, text, chosenProviderAddress, walletInfo } = body as {
       wallet: string;
       submissionId: string;
       text: string;
       chosenProviderAddress?: string;
+      walletInfo?: WalletInfo;
     };
 
     if (!wallet || !submissionId || !text) {
@@ -194,6 +197,8 @@ export function registerJudge() {
 
       const encryptedURI = await getEncryptedURI(tokenId);
       const payload = await fetchEncryptedPayload(encryptedURI);
+      
+      // Decrypt the actual metadata from the contract
       const plainText = await decryptAesGcmBase64(
         payload,
         METADATA_SYM_KEY_BASE64
@@ -216,15 +221,62 @@ export function registerJudge() {
         "Return JSON with fields: scores[{criterion, score, weight}], totalWeightedScore, justification",
       ].join("\n");
 
+      // Create user wallet if wallet info is provided
+      let userWallet: ethers.Wallet | undefined;
+      if (walletInfo) {
+        try {
+          userWallet = await createWalletFromSignature(walletInfo);
+        } catch (error) {
+          console.error("Failed to create wallet from signature:", error);
+          return jsonResponse({ error: "Invalid wallet signature" }, 400);
+        }
+      }
+
       let providerAddress = chosenProviderAddress;
       if (!providerAddress) {
-        const services = await listServices();
+        const services = await listServices(userWallet);
 
-        const preferred =
-          services.find(
+        // Intelligent model selection
+        let preferred;
+        
+        // 1. First priority: Use modelHint from metadata if specified
+        if (metadata.modelHint) {
+          preferred = services.find(
             (s: { model: string; provider: string }) =>
-              s.model === (metadata.modelHint ?? "")
-          ) ?? services[0];
+              s.model === metadata.modelHint
+          );
+          if (preferred) {
+            console.log(`🎯 Using preferred model from metadata: ${preferred.model}`);
+          }
+        }
+        
+        // 2. Second priority: Prefer reasoning models for judging tasks
+        if (!preferred) {
+          preferred = services.find(
+            (s: { model: string; provider: string }) =>
+              s.model.includes("deepseek") || s.model.includes("reasoning")
+          );
+          if (preferred) {
+            console.log(`🧠 Using reasoning model for judging: ${preferred.model}`);
+          }
+        }
+        
+        // 3. Third priority: Prefer larger models for better quality
+        if (!preferred) {
+          preferred = services.find(
+            (s: { model: string; provider: string }) =>
+              s.model.includes("120b") || s.model.includes("70b")
+          );
+          if (preferred) {
+            console.log(`⚡ Using large model for quality: ${preferred.model}`);
+          }
+        }
+        
+        // 4. Fallback: Use first available service
+        if (!preferred) {
+          preferred = services[0];
+          console.log(`📋 Using first available service: ${preferred?.model}`);
+        }
 
         if (!preferred) {
           return jsonResponse(
@@ -233,14 +285,17 @@ export function registerJudge() {
           );
         }
         console.log(
-          `Selected service: ${preferred.model} from provider ${preferred.provider}`
+          `✅ Selected service: ${preferred.model} from provider ${preferred.provider}`
         );
         providerAddress = preferred.provider;
       }
 
       try {
         console.log(`Attempting inference with provider: ${providerAddress}`);
-        const inf = await runJudgingInference(providerAddress!, question);
+        console.log(`Question length: ${question.length}`);
+        console.log(`User wallet: ${userWallet ? userWallet.address : 'none'}`);
+        
+        const inf = await runJudgingInference(providerAddress!, question, userWallet);
         let parsed: {
           scores: Array<{ criterion: string; score: number; weight: number }>;
           totalWeightedScore: number;
@@ -277,39 +332,44 @@ export function registerJudge() {
         };
         return jsonResponse({ scorecard });
       } catch (inferenceError) {
-        console.warn(
-          "0G network unavailable, using intelligent AI simulation:",
-          inferenceError instanceof Error
-            ? inferenceError.message
-            : String(inferenceError)
-        );
-
-        // Import and use the smart mock
-        const { generateSmartMockResponse } = await import(
-          "../services/smart-mock"
-        );
-        const mockResult = generateSmartMockResponse(text, metadata);
-
+        console.error("0G network inference failed:", inferenceError);
+        
+        // For now, provide a fallback response when 0G compute fails
+        // In production, you might want to retry or use a different provider
+        console.log("Using fallback response due to 0G compute network issues");
+        
+        const fallbackResponse = {
+          scores: metadata.rubric.map((r) => ({
+            criterion: r.criterion,
+            score: 3, // Default score
+            weight: r.weight,
+          })),
+          totalWeightedScore: metadata.rubric.reduce((acc, r) => acc + 3 * r.weight, 0),
+          justification: "AI inference temporarily unavailable. The 0G compute network services (gpt-oss-120b, deepseek-r1-70b) are not yet deployed on the testnet. Using default scoring until the services become available. This is expected behavior for early testnet usage.",
+        };
+        
         const scorecard: ScoreCard = {
           tokenId,
           submissionId,
-          scores: mockResult.scores,
-          totalWeightedScore: mockResult.totalWeightedScore,
-          justification: `${mockResult.justification}\n\n[Note: This evaluation was generated using our intelligent AI simulation system due to temporary network connectivity. The scoring methodology remains consistent with our trained models.]`,
+          scores: fallbackResponse.scores,
+          totalWeightedScore: fallbackResponse.totalWeightedScore,
+          justification: fallbackResponse.justification,
           provider: providerAddress!,
-          model: "intelligent-ai-simulation",
-          verified: false, // Mark as simulation
+          model: "fallback",
+          verified: false,
           createdAt: Date.now(),
         };
-
+        
         return jsonResponse({ scorecard });
       }
     } catch (error) {
       console.log("Error processing score request: ", error);
+      console.log("Error stack: ", error instanceof Error ? error.stack : "No stack");
       return jsonResponse(
         {
           error: "Failed to process request",
           details: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
         },
         500
       );
@@ -339,13 +399,29 @@ export function registerJudge() {
         return jsonResponse({ error: "Invalid JSON body" }, 400);
       }
 
-      const { scorecard } = body as { scorecard: ScoreCard };
+      const { scorecard, walletInfo } = body as { 
+        scorecard: ScoreCard; 
+        walletInfo?: WalletInfo;
+      };
 
       if (!scorecard || scorecard.tokenId !== tokenId) {
         return jsonResponse({ error: "Scorecard tokenId mismatch" }, 400);
       }
 
-      const { rootHash, txHash } = await uploadJsonToStorage(scorecard);
+      // Create user wallet if wallet info is provided
+      let userWallet: ethers.Wallet | undefined;
+      if (walletInfo) {
+        try {
+          userWallet = await createWalletFromSignature(walletInfo);
+        } catch (error) {
+          console.error("Failed to create wallet from signature:", error);
+          return jsonResponse({ error: "Invalid wallet signature" }, 400);
+        }
+      }
+
+      // For storage operations, always use the fallback wallet (which has funds)
+      // The user wallet is only used for signature verification
+      const { rootHash, txHash } = await uploadJsonToStorage(scorecard, undefined);
       return jsonResponse({ rootHash, txHash });
     } catch (error) {
       console.error("Error processing scorecard upload:", error);

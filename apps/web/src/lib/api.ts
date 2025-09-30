@@ -1,4 +1,5 @@
 import { JudgeMetadata, Scorecard } from "../types";
+import { WalletInfo } from "./walletSigner";
 
 export async function fetchJudgeMetadata(
   tokenId: number,
@@ -22,12 +23,13 @@ export async function runJudge(
   tokenId: number,
   wallet: string,
   submissionId: string,
-  text: string
+  text: string,
+  walletInfo?: WalletInfo
 ): Promise<{ scorecard: Scorecard }> {
   const res = await fetch(`/judge/${tokenId}/score`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ wallet, submissionId, text }),
+    body: JSON.stringify({ wallet, submissionId, text, walletInfo }),
   });
   if (!res.ok) {
     const err = await res.json();
@@ -38,12 +40,13 @@ export async function runJudge(
 
 export async function uploadScorecard(
   tokenId: number,
-  scorecard: Scorecard
+  scorecard: Scorecard,
+  walletInfo?: WalletInfo
 ): Promise<{ rootHash: string; txHash: string }> {
   const res = await fetch(`/judge/${tokenId}/scorecard/upload`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scorecard }),
+    body: JSON.stringify({ scorecard, walletInfo }),
   });
   if (!res.ok) {
     const err = await res.json();

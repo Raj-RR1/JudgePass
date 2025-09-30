@@ -5,12 +5,14 @@ import { getSubmissionById } from "../lib/submissionsDb";
 import { JudgeMetadata, Submission, Scorecard } from "../types";
 import { apiClient } from "../lib/apiClient";
 import { toast } from "react-hot-toast";
-import { ResultsModal } from "../components/ResultsModal"; // We'll create this next
+import { ResultsModal } from "../components/ResultsModal";
+import { useWalletSigner } from "../lib/walletSigner";
 
 export function ScoringPage() {
   const { id } = useParams<{ id: string }>();
   const { address } = useAccount();
   const navigate = useNavigate();
+  const walletSigner = useWalletSigner();
 
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [metadata, setMetadata] = useState<JudgeMetadata | null>(null);
@@ -39,28 +41,47 @@ export function ScoringPage() {
     e.preventDefault();
     if (!submission || !metadata || !address) return;
 
+    if (!walletSigner) {
+      toast.error("Please connect your wallet to submit for scoring");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // In a real app, you would use the manually entered scores.
-    // For this project's flow, we trigger the AI inference with the description.
-    const promise = apiClient.runJudge(
-      metadata.tokenId,
-      address,
-      submission.id,
-      submission.description
-    );
-
-    toast.promise(promise, {
-      loading: "Submitting to AI for scoring...",
-      success: "AI scoring complete!",
-      error: (err) => err.message || "Scoring failed.",
-    });
-
     try {
+      // Create a message to sign for authentication
+      const message = `JudgePass: Submit for scoring submission ${submission.id} at ${Date.now()}`;
+      const signature = await walletSigner.signMessage(message);
+      
+      const walletInfo = {
+        address: walletSigner.address,
+        signature,
+        message,
+      };
+
+      // In a real app, you would use the manually entered scores.
+      // For this project's flow, we trigger the AI inference with the description.
+      // Get tokenId from localStorage or use a default value
+      const tokenId = Number(localStorage.getItem("judge_token_id") || "1");
+      const promise = apiClient.runJudge(
+        tokenId,
+        address,
+        submission.id,
+        submission.description,
+        walletInfo
+      );
+
+      toast.promise(promise, {
+        loading: "Submitting to AI for scoring...",
+        success: "AI scoring complete!",
+        error: (err) => err.message || "Scoring failed.",
+      });
+
       const result = await promise;
       setFinalScorecard(result.scorecard);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to submit for scoring. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -163,7 +184,7 @@ export function ScoringPage() {
                 className="form-textarea w-full rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary focus:ring-primary text-gray-800 dark:text-gray-200"
                 id="justification"
                 placeholder="Your justification will be overridden by the AI's justification."
-                rows="5"
+                rows={5}
                 value={justification}
                 onChange={(e) => setJustification(e.target.value)}
               />

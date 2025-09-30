@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 import { apiClient } from "../lib/apiClient"; // <-- Uses the swappable client
 import { JudgeMetadata, Scorecard, Submission } from "../types";
+import { useWalletSigner } from "../lib/walletSigner";
 
 interface Props {
   tokenId: number;
@@ -29,25 +30,51 @@ export function JudgePanel({
   } | null>(null);
   const [isJudging, setIsJudging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const walletSigner = useWalletSigner();
 
   const handleRunJudge = async () => {
+    if (!walletSigner) {
+      toast.error("Please connect your wallet to run the judge");
+      return;
+    }
+
     setIsJudging(true);
     setScorecard(null);
     setUploadResult(null);
 
-    const promise = apiClient.runJudge(tokenId, wallet, submission.id, text);
-
-    toast.promise(promise, {
-      loading: "Running AI Judge...",
-      success: "Judge finished successfully!",
-      error: (err) => err.message || "Failed to run judge.",
-    });
-
     try {
+      // Create a message to sign for authentication
+      const message = `JudgePass: Run judge for submission ${submission.id} at ${Date.now()}`;
+      const signature = await walletSigner.signMessage(message);
+      
+      const walletInfo = {
+        address: walletSigner.address,
+        signature,
+        message,
+      };
+
+      // Only call runJudge if it exists (for mockApi), otherwise show error
+      const runJudge = (apiClient as any).runJudge;
+      if (typeof runJudge !== "function") {
+        toast.error("AI Judge is not available in this environment.");
+        setIsJudging(false);
+        return;
+      }
+
+      const promise = runJudge(tokenId, wallet, submission.id, text, walletInfo);
+
+      toast.promise(promise, {
+        loading: "Running AI Judge...",
+        success: "Judge finished successfully!",
+        error: (err) => err.message || "Failed to run judge.",
+      });
+
       const result = await promise;
       setScorecard(result.scorecard);
     } catch (e) {
       console.error(e);
+      toast.error("Failed to run judge. Please try again.");
     } finally {
       setIsJudging(false);
     }
@@ -55,20 +82,46 @@ export function JudgePanel({
 
   const handleSaveScorecard = async () => {
     if (!scorecard) return;
-    setIsSaving(true);
-    const promise = apiClient.uploadScorecard(tokenId, scorecard);
+    
+    if (!walletSigner) {
+      toast.error("Please connect your wallet to save the scorecard");
+      return;
+    }
 
-    toast.promise(promise, {
-      loading: "Saving to 0G Storage...",
-      success: "Scorecard saved!",
-      error: (err) => err.message || "Failed to save.",
-    });
+    setIsSaving(true);
 
     try {
+      // Create a message to sign for authentication
+      const message = `JudgePass: Save scorecard for submission ${scorecard.submissionId} at ${Date.now()}`;
+      const signature = await walletSigner.signMessage(message);
+      
+      const walletInfo = {
+        address: walletSigner.address,
+        signature,
+        message,
+      };
+
+      // Only call uploadScorecard if it exists (for mockApi), otherwise show error
+      const uploadScorecard = (apiClient as any).uploadScorecard;
+      if (typeof uploadScorecard !== "function") {
+        toast.error("Saving scorecard is not available in this environment.");
+        setIsSaving(false);
+        return;
+      }
+
+      const promise = uploadScorecard(tokenId, scorecard, walletInfo);
+
+      toast.promise(promise, {
+        loading: "Saving to 0G Storage...",
+        success: "Scorecard saved!",
+        error: (err) => err.message || "Failed to save.",
+      });
+
       const result = await promise;
       setUploadResult(result);
     } catch (e) {
       console.error(e);
+      toast.error("Failed to save scorecard. Please try again.");
     } finally {
       setIsSaving(false);
     }

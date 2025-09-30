@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 import { Scorecard } from "../types";
 import { apiClient } from "../lib/apiClient";
 import { useState } from "react";
+import { useWalletSigner } from "../lib/walletSigner";
 
 export function ResultsModal({
   scorecard,
@@ -12,24 +13,42 @@ export function ResultsModal({
   onClose: () => void;
 }) {
   const [isSaving, setIsSaving] = useState(false);
+  const walletSigner = useWalletSigner();
 
   const handleSave = async () => {
+    if (!walletSigner) {
+      toast.error("Please connect your wallet to save the scorecard");
+      return;
+    }
+
     setIsSaving(true);
-    const promise = apiClient.uploadScorecard(scorecard.tokenId, scorecard);
-    toast.promise(promise, {
-      loading: "Saving to 0G Storage...",
-      success: (data) => {
-        navigator.clipboard.writeText(data.rootHash);
-        return `Scorecard saved! Root hash copied to clipboard.`;
-      },
-      error: (err) => err.message || "Failed to save.",
-    });
 
     try {
+      // Create a message to sign for authentication
+      const message = `JudgePass: Save scorecard for submission ${scorecard.submissionId} at ${Date.now()}`;
+      const signature = await walletSigner.signMessage(message);
+      
+      const walletInfo = {
+        address: walletSigner.address,
+        signature,
+        message,
+      };
+
+      const promise = apiClient.uploadScorecard(scorecard.tokenId, scorecard, walletInfo);
+      toast.promise(promise, {
+        loading: "Saving to 0G Storage...",
+        success: (data: { rootHash: string; txHash: string }) => {
+          navigator.clipboard.writeText(data.rootHash);
+          return `Scorecard saved! Root hash copied to clipboard.`;
+        },
+        error: (err) => err.message || "Failed to save.",
+      });
+
       await promise;
       onClose(); // Close modal on success
     } catch (err) {
       console.error(err);
+      toast.error("Failed to save scorecard. Please try again.");
     } finally {
       setIsSaving(false);
     }
