@@ -1,14 +1,14 @@
-# JudgePass — INFT‑powered, verifiable hackathon judging 🎯
+# JudgePass — INFT‑powered hackathon judging 🎯
 
-A portable “judge brain” packaged as an Intelligent NFT (INFT) that mirrors ETHGlobal‑style rubrics, runs TEE‑verified scoring, and stores immutable scorecards on 0G Storage.
-Judging becomes transparent, auditable, and access‑controlled via INFT ownership or authorization. ✅
+A portable "judge brain" packaged as an Intelligent NFT (INFT) that uses ETHGlobal‑style rubrics and stores immutable scorecards on 0G Storage.
+Judging becomes transparent, auditable, and access‑controlled via INFT ownership and wallet signature verification. ✅
 
 ### Highlights
 
-- ETHGlobal‑style rubric: Innovation, Technical Execution, Sponsor Integration, Utility & UX, Documentation & Demo.
-- Verifiable compute: TEE‑verified inference with single‑use headers and attestations.
+- ETHGlobal‑style rubric: Technical Innovation, User Experience, Business Potential.
+- Real blockchain data: Contract metadata, wallet signatures, and 0G storage integration.
 - Tamper‑proof audit: Merkle root hashes for every scorecard on 0G Storage.
-- Portable & permissioned: Rules packaged inside an INFT; usage gated on‑chain. 🔐
+- Portable & permissioned: Rules packaged inside an INFT; usage gated by wallet ownership. 🔐
 
 ---
 
@@ -41,12 +41,11 @@ It ensures consistent, auditable judging across events while respecting on‑cha
 
 ### What it does
 
-- Loads encrypted judge metadata (rubric, prompts) from 0G Storage, accessible only to the INFT owner or authorized wallets. 🔑
-- Runs scoring via 0G Compute using single‑use headers and TEE (TeeML) verification.
+- Loads encrypted judge metadata (rubric, prompts) from blockchain contract, accessible only to the INFT owner. 🔑
+- Runs AI scoring via 0G Compute Network (with graceful fallback when services unavailable).
 - Saves immutable scorecards (scores, justification, provider, verification flag) to 0G Storage and returns a root hash.
-- Supports code judging through optional .zip uploads with structured summaries.
-- Enables multi‑judge “ensemble” scoring with tier‑weighted aggregation and a dispute flow.
-- Provides judge profiles (tier, price, traits) and a simple marketplace for listing/purchasing INFT judges. 🛒
+- Requires wallet signature verification for all operations to ensure proper authentication.
+- Provides intelligent model selection for AI inference when multiple models are available.
 
 ---
 
@@ -60,18 +59,11 @@ It ensures consistent, auditable judging across events while respecting on‑cha
 
 ### Core flows
 
-- Hacker
-
-  - Submit project (Title, Team, Links, Description, optional .zip).
-  - View status and scorecard root hash.
-  - File disputes referencing the root hash. ⚖️
-
 - Judge/Organizer
   - Connect wallet → Load INFT judge → View rubric/prompt.
-  - Browse submissions → Run single or ensemble judging.
+  - Browse submissions → Run AI judging with wallet signature.
   - Save scorecard(s) → Present root hash for audit.
-  - Manage judge profile (tier, price, traits) and marketplace listings/purchases.
-  - Transfer or authorize usage on‑chain (ERC‑7857‑aligned). 🔄
+  - All operations require wallet signature verification for security.
 
 ---
 
@@ -90,33 +82,15 @@ It ensures consistent, auditable judging across events while respecting on‑cha
 
 ### API overview
 
-- Judge core
+- Judge core (✅ Implemented)
 
   - GET /judge/:tokenId/metadata?wallet=0x… → Load rubric/prompt (access‑controlled)
-  - GET /judge/services → Available verifiable LLM providers
-  - POST /judge/:tokenId/score → Run single judge
+  - GET /judge/services → Available AI providers (with intelligent model selection)
+  - POST /judge/:tokenId/score → Run AI judge with wallet signature
   - POST /judge/:tokenId/scorecard/upload → Save scorecard (returns root hash)
 
-- Ensemble
-
-  - POST /judge/ensemble/score → Multi‑judge by tokenIds/traits (tier‑weighted)
-  - POST /judge/ensemble/save → Save combined scorecard
-
-- Submissions
-
-  - POST /submissions → Text‑only
-  - POST /submissions/zip (multipart) → With .zip; stores root hash + summary
-  - GET /submissions, GET /submissions/:id
-
-- Disputes
-
-  - POST /disputes → File dispute (submissionId + rootHash)
-  - GET /disputes, POST /disputes/:id/resolve
-
-- Profiles & Marketplace
-  - GET/POST /judges/:tokenId → Tier, price, traits
-  - GET /judges, GET /judges/ranked
-  - GET/POST /marketplace/listings, POST /marketplace/listings/:id/purchase
+- Health check (✅ Implemented)
+  - GET /health → API status and timestamp
 
 ---
 
@@ -154,24 +128,26 @@ It ensures consistent, auditable judging across events while respecting on‑cha
 
 ### Demo rubric (ETHGlobal‑style)
 
-- Innovation (25), Technical Execution (25), Sponsor Integration (20), Utility & UX (20), Documentation & Demo (10).
+- Technical Innovation (40%), User Experience (30%), Business Potential (30%).
 - Scores are returned as JSON; weighted total is computed and stored with a verification flag. 🧮
 
 ---
 
 ### Security & verification
 
-- TEE verification: show “Verified (TEE)” only when the broker attestation is valid.
+- Wallet signature verification: all operations require valid wallet signatures for authentication.
 - Storage integrity: every scorecard upload returns a Merkle root hash for tamper‑proof audit.
-- Access control: metadata and judge execution are gated by INFT ownership/authorization. 🔒
+- Access control: metadata and judge execution are gated by INFT ownership and wallet verification. 🔒
+- Real blockchain data: all operations use actual blockchain contract data instead of mock data.
 
 ---
 
 ### Notes
 
-- Code zips: enforced size/type; prompts include brief tree + key files (truncated) for summarization.
+- AI inference: Uses 0G Compute Network with intelligent model selection (prefers reasoning models).
+- Graceful fallback: When 0G compute services are unavailable, uses default scoring with informative messages.
 - Provider transparency: scorecards include provider identity and verification status.
-- Ensemble scoring: tier‑weighted averages with justification aggregation.
+- Real blockchain integration: All operations use actual contract data and 0G storage.
 
 ---
 
@@ -185,9 +161,12 @@ It ensures consistent, auditable judging across events while respecting on‑cha
 
 ### Roadmap
 
-- On‑chain attestations linking scorecard root hashes to event IDs for provenance.
-- Richer marketplace filters (traits, pricing, models, verification modes).
-- Templated dispute resolution with signed resolution artifacts and audit trails.
+- Manual scoring mode: Allow judges to enter scores manually instead of AI inference.
+- Ensemble scoring: Multi‑judge scoring with tier‑weighted aggregation.
+- Submission management: Full submission CRUD operations.
+- Dispute system: File and resolve disputes with scorecard references.
+- Marketplace: Judge profiles and marketplace for listing/purchasing INFT judges.
+- On‑chain attestations: Link scorecard root hashes to event IDs for provenance.
 
 ---
 
@@ -238,13 +217,12 @@ bun run dev
 
 ### Example workflows
 
-- Single judge scoring
+- Single judge scoring (✅ Working)
 
   - Organizer connects wallet → Loads INFT judge → GET /judge/:tokenId/metadata → POST /judge/:tokenId/score → POST /judge/:tokenId/scorecard/upload → Share root hash.
 
-- Ensemble scoring
+- Manual scoring (🚧 Planned)
+  - Judge enters scores manually → Calculate weighted total → Save scorecard to blockchain.
 
-  - Organizer selects multiple judges (tokenIds/traits) → POST /judge/ensemble/score → Review weighted output → POST /judge/ensemble/save → Share combined root hash.
-
-- Dispute handling
-  - Hacker submits dispute with submissionId + rootHash → Organizer reviews artifacts and TEE attestation → Resolve with signed outcome. 📝
+- Ensemble scoring (🚧 Planned)
+  - Organizer selects multiple judges → Run parallel scoring → Aggregate results → Save combined scorecard.
